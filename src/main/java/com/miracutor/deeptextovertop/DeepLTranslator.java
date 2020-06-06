@@ -1,6 +1,7 @@
 package com.miracutor.deeptextovertop;
 
 import com.google.common.net.UrlEscapers;
+import javafx.application.Platform;
 import org.checkerframework.checker.nullness.compatqual.NullableDecl;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -18,14 +19,14 @@ import java.time.Duration;
 
 public class DeepLTranslator {
 
-    private static final Duration TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration TIMEOUT = Duration.ofSeconds(15);
     private static ChromeOptions chromeOptions;
     private static WebDriver driver;
 
     DeepLTranslator() {
         Path chrome = Paths.get("chromedriver.exe");
         if (!chrome.toFile().exists()) {
-            MainApp.errorDialog("'chromedriver.exe' is missing.", true);
+            Platform.runLater(() -> MainApp.errorDialog("'chromedriver.exe' is missing.", true));
         }
         System.setProperty("webdriver.chrome.driver", chrome.toAbsolutePath().toString());
         chromeOptions = new ChromeOptions();

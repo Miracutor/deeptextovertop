@@ -2,6 +2,7 @@ package com.miracutor.deeptextovertop;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.util.Duration;
@@ -25,6 +26,7 @@ public class FetchClipboard extends Thread {
             ClipboardContent content = new ClipboardContent();
             content.putString(currentText);
             clipboard.setContent(content);
+            System.out.println("[" + logTime.format(new Date()) + "] " + "Change: " + currentText);
             translate(currentText);
             initialStart = true;
         } else if (clipboard.hasString()) {
@@ -35,7 +37,7 @@ public class FetchClipboard extends Thread {
                 translate(currentText);
             }
         } else {
-            System.out.println("Clipboard content not supported.");
+            System.out.println("[" + logTime.format(new Date()) + "] " + "Clipboard content not supported.");
         }
     }));
     private volatile boolean exit = false;
@@ -47,17 +49,24 @@ public class FetchClipboard extends Thread {
     private void translate(String text) {
         try {
             String currentTranslation = deepLTranslator.translate(text, "en", "ja");
-            MainApp.changeText(currentTranslation);
             System.out.println("[" + logTime.format(new Date()) + "] " + "Translation: " + currentTranslation);
-            MainApp.setError(false);
+            Platform.runLater(() -> {
+                MainApp.changeText(currentTranslation);
+                MainApp.setError(false);
+            });
         } catch (StaleElementReferenceException e) {
-            System.out.println("StaleElementReferenceException happens.\nRetrying...");
-            MainApp.errorDialog("Translation cannot be loaded.\nRetrying...");
-            MainApp.setError(true);
+            System.out.println("[" + logTime.format(new Date()) + "] " + "StaleElementReferenceException happens.\nRetrying...");
+            Platform.runLater(() -> {
+                MainApp.errorDialog("Translation cannot be loaded.\nRetrying...");
+                MainApp.setError(true);
+            });
             currentText = "";
         } catch (TimeoutException e) {
-            System.out.println("Timeout reached.");
-            MainApp.errorDialog("Timeout reached.\nPlease check your connections and try again.");
+            System.out.println("[" + logTime.format(new Date()) + "] " + "Timeout reached.");
+            Platform.runLater(() -> MainApp.errorDialog("Timeout reached.\nPlease check your connections and try again."));
+        } catch (IllegalStateException e) {
+            System.out.println("[" + logTime.format(new Date()) + "] " + "Text is not valid: " + e.getMessage());
+            Platform.runLater(() -> MainApp.errorDialog(e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,7 +77,7 @@ public class FetchClipboard extends Thread {
         repeatTask.setCycleCount(Timeline.INDEFINITE);
         repeatTask.play();
 
-        System.out.println("Start hearing...");
+        System.out.println("[" + logTime.format(new Date()) + "] " + "Start hearing...");
         if (exit) {
             repeatTask.stop();
             DeepLTranslator.shutdown();
@@ -76,7 +85,7 @@ public class FetchClipboard extends Thread {
     }
 
     public void stopProgram() {
-        System.out.println("Program closed...");
+        System.out.println("[" + logTime.format(new Date()) + "] " + "Program closed...");
         exit = true;
     }
 }

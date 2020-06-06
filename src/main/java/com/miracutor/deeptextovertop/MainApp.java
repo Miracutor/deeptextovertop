@@ -1,6 +1,7 @@
 package com.miracutor.deeptextovertop;
 
 import javafx.application.Application;
+import javafx.concurrent.Task;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -46,11 +47,61 @@ public class MainApp extends Application {
         translation_log.add(newText);
     }
 
+    public void setUpUI() {
+        mainLayout.setBackground(null);
+        mainLayout.setBorder(border_window);
+        mainLayout.setOnMousePressed(event -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+        mainLayout.setOnMouseDragged(event -> {
+            primaryStage.setX(event.getScreenX() - xOffset);
+            primaryStage.setY(event.getScreenY() - yOffset);
+        });
+        Button exitBtn = new Button("X");
+        exitBtn.setOnMouseClicked((event -> {
+            primaryStage.close();
+            trans.stopProgram();
+        }));
+        exitBtn.setStyle(btn_style_normal);
+        exitBtn.setOnMouseEntered(mouseEvent -> exitBtn.setStyle(btn_style_hover));
+        exitBtn.setOnMouseExited(mouseEvent -> exitBtn.setStyle(btn_style_normal));
+        AnchorPane.setTopAnchor(exitBtn, 0.0);
+        AnchorPane.setLeftAnchor(exitBtn, 560.0);
+        AnchorPane.setRightAnchor(exitBtn, 0.0);
+        AnchorPane.setBottomAnchor(exitBtn, 120.0);
+        mainLayout.getChildren().add(exitBtn);
+
+        Text mainText = new Text();
+        mainText.setText(currentTranslation);
+        mainText.setFont(new Font(18));
+        mainText.setFill(Color.WHITE);
+        mainText.setWrappingWidth(520.0);
+        mainText.setTextAlignment(TextAlignment.JUSTIFY);
+        AnchorPane.setTopAnchor(mainText, 10.0);
+        AnchorPane.setLeftAnchor(mainText, 15.0);
+        AnchorPane.setRightAnchor(mainText, 40.0);
+        AnchorPane.setBottomAnchor(mainText, 0.0);
+        mainLayout.getChildren().add(mainText);
+
+        error = new Text();
+        error.setFill(Color.RED);
+        AnchorPane.setTopAnchor(error, 120.0);
+        AnchorPane.setLeftAnchor(error, 560.0);
+        AnchorPane.setRightAnchor(error, 0.0);
+        AnchorPane.setBottomAnchor(error, 0.0);
+        mainLayout.getChildren().add(error);
+    }
+
     public static void setError(boolean e) {
         if (e)
             error.setText("ERROR");
         else
             error.setText("");
+    }
+
+    public static void errorDialog(String e) {
+        errorDialog(e, false);
     }
 
     /*public void loadFilter(){
@@ -62,14 +113,10 @@ public class MainApp extends Application {
         return text;
     }*/
 
-    public static void errorDialog(String e) {
-        errorDialog(e, false);
-    }
-
     public static void errorDialog(String e, boolean severe) {
         Stage errorStage = new Stage();
         errorStage.setTitle("Error");
-        primaryStage.setAlwaysOnTop(false);
+        //primaryStage.setAlwaysOnTop(false);
         errorStage.setAlwaysOnTop(true);
         BorderPane errorLayout = new BorderPane();
 
@@ -148,53 +195,14 @@ public class MainApp extends Application {
         primaryStage.show();
         translation_log = new ArrayList<>();
         trans = new FetchClipboard();
-        trans.start();
-    }
-
-    public void setUpUI() {
-        mainLayout.setBackground(null);
-        mainLayout.setBorder(border_window);
-        mainLayout.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-        mainLayout.setOnMouseDragged(event -> {
-            primaryStage.setX(event.getScreenX() - xOffset);
-            primaryStage.setY(event.getScreenY() - yOffset);
-        });
-        Button exitBtn = new Button("X");
-        exitBtn.setOnMouseClicked((event -> {
-            primaryStage.close();
-            trans.stopProgram();
-        }));
-        exitBtn.setStyle(btn_style_normal);
-        exitBtn.setOnMouseEntered(mouseEvent -> exitBtn.setStyle(btn_style_hover));
-        exitBtn.setOnMouseExited(mouseEvent -> exitBtn.setStyle(btn_style_normal));
-        AnchorPane.setTopAnchor(exitBtn, 0.0);
-        AnchorPane.setLeftAnchor(exitBtn, 560.0);
-        AnchorPane.setRightAnchor(exitBtn, 0.0);
-        AnchorPane.setBottomAnchor(exitBtn, 120.0);
-        mainLayout.getChildren().add(exitBtn);
-
-        Text mainText = new Text();
-        mainText.setText(currentTranslation);
-        mainText.setFont(new Font(18));
-        mainText.setFill(Color.WHITE);
-        mainText.setWrappingWidth(520.0);
-        mainText.setTextAlignment(TextAlignment.JUSTIFY);
-        AnchorPane.setTopAnchor(mainText, 10.0);
-        AnchorPane.setLeftAnchor(mainText, 15.0);
-        AnchorPane.setRightAnchor(mainText, 40.0);
-        AnchorPane.setBottomAnchor(mainText, 0.0);
-        mainLayout.getChildren().add(mainText);
-
-        error = new Text();
-        error.setFill(Color.RED);
-        AnchorPane.setTopAnchor(error, 120.0);
-        AnchorPane.setLeftAnchor(error, 560.0);
-        AnchorPane.setRightAnchor(error, 0.0);
-        AnchorPane.setBottomAnchor(error, 0.0);
-        mainLayout.getChildren().add(error);
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                trans.start();
+                return null;
+            }
+        };
+        new Thread(task).start();
     }
 
 }
